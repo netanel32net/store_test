@@ -1,5 +1,6 @@
 <?php session_start();
 error_reporting(0);
+
 include_once('includes/config.php');
 ?>
 <?php include_once('includes/header.php');?>
@@ -8,28 +9,23 @@ include_once('includes/config.php');
         <header class="bg-dark py-5">
             <div class="container px-4 px-lg-5 my-5">
 <?php 
-$cid = safe($_GET['cid']);
-$query=mysqli_query($con,"select category.id as catid,category.categoryName from category where id='$cid' ");
-if(mysqli_num_rows($query) == 0){
-	echo "<script type='text/javascript'> document.location ='index.php'; </script>";   
-}
-while($result=mysqli_fetch_array($query))
-{ ?>
+if(isset($_POST['searchPro'])){
+?>
 
                 <div class="text-center text-white">
-                    <h1 class="display-4 fw-bolder"><?php echo $result['categoryName'];?></h1>
-                    <p class="lead fw-normal text-white-50 mb-0">Catgeory Products/Items</p>
+                    <h1 class="display-4 fw-bolder">Search</h1>
                 </div>
-            <?php } ?>
             </div>
         </header>
         <!-- Section-->
         <section class="py-5">
             <div class="container px-4 px-lg-5 mt-5">
                 <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
-<?php 
-$query=mysqli_query($con,"select products.id as pid,products.productImage1,products.productName,products.productPriceBeforeDiscount,products.productPrice from products where category='$cid' order by pid desc  ");
-$count=mysqli_num_rows($query);
+<?php
+$searchVal = safe($_POST['searchVal']);
+$query = mysqli_query($con, "SELECT * FROM `products` WHERE `productName` LIKE '%".$searchVal."%'");
+$count = mysqli_num_rows($query);
+echo "<script>console.log('".$count."')</script>";
 if($count>0){
 while($row=mysqli_fetch_array($query))
 {
@@ -59,9 +55,11 @@ while($row=mysqli_fetch_array($query))
 <?php } ?>
                 </div>
             </div>
-
- 
-</div>
+		</div>
         </section>
         <!-- Footer-->
-   <?php include_once('includes/footer.php'); ?>
+   <?php
+}else{
+	echo "<script type='text/javascript'> document.location ='index.php'; </script>";   
+}
+include_once('includes/footer.php'); ?>

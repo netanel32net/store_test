@@ -1,4 +1,6 @@
 <?php session_start();
+error_reporting(0);
+
 include_once('includes/config.php');
 if(strlen($_SESSION['id'])==0)
 {   header('location:logout.php');
@@ -7,14 +9,18 @@ if(strlen($_SESSION['id'])==0)
 //For changing  User  Profile Password
 if(isset($_POST['update']))
 {
-$currentpwd=md5($_POST['cpass']);
-$newpwd=md5($_POST['newpass']);
+$currentpwd = password($_POST['cpass']);
+$newpwd = safe($_POST['newpass']);
+$newpwdHashed = password($_POST['newpass']);
 $uid=$_SESSION['id'];
-$sql=mysqli_query($con,"SELECT id FROM  users where password='$currentpwd' and id='$uid'");
+$sql=mysqli_query($con,"SELECT id FROM users where password='$currentpwd' and id='$uid'");
 $num=mysqli_num_rows($sql);
-if($num>0)
+if(!preg_match('/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{4,200}/', $newpwd)){
+	echo "<script>alert('The new password must be written with english letters and include one big letter and one number.');</script>";
+	echo "<script type='text/javascript'> document.location ='change-password.php'; </script>";   
+}else if($num>0)
 {
- $con=mysqli_query($con,"update users set password='$newpwd' where id='$uid'");
+ $con=mysqli_query($con,"update users set password='$newpwdHashed' where id='$uid'");
 echo "<script>alert('Password Changed Successfully !!');</script>";
  echo "<script type='text/javascript'> document.location ='change-password.php'; </script>";
 }else{

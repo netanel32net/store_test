@@ -1,27 +1,28 @@
 <?php session_start();
 error_reporting(0);
+
 include_once('includes/config.php');
 // Code for User login
 if(isset($_POST['login']))
 {
-   $email=$_POST['emailid'];
-   $password=md5($_POST['inputuserpwd']);
-$query=mysqli_query($con,"SELECT id,name FROM users WHERE email='$email' and password='$password'");
-$num=mysqli_fetch_array($query);
-//If Login Suceesfull
-if($num>0)
-{
-$_SESSION['login']=$_POST['email'];
-$_SESSION['id']=$num['id'];
-$_SESSION['username']=$num['name'];
-echo "<script type='text/javascript'> document.location ='index.php'; </script>";
-}
-//If Login Failed
-else{
-    echo "<script>alert('Invalid login details');</script>";
-    echo "<script type='text/javascript'> document.location ='login.php'; </script>";
-exit();
-}
+	$email = safe($_POST['emailid']);
+	$password = password($_POST['inputuserpwd']);
+	$query=mysqli_query($con,"SELECT id,name FROM users WHERE email='$email' and password='$password'");
+	$num=mysqli_fetch_array($query);
+	//If Login Suceesfull
+	if($num>0)
+	{
+		$_SESSION['login']=$_POST['email'];
+		$_SESSION['id']=$num['id'];
+		$_SESSION['username']=$num['name'];
+		echo "<script type='text/javascript'> document.location ='index.php'; </script>";
+	}
+	//If Login Failed
+	else{
+		echo "<script>alert('Invalid login details');</script>";
+		echo "<script type='text/javascript'> document.location ='login.php'; </script>";
+		exit();
+	}
 }
 ?>
 <!DOCTYPE html>

@@ -1,30 +1,45 @@
 <?php session_start();
 include_once('includes/config.php');
-error_reporting(0);
-if(isset($_POST['submit']))
-{
-$name=$_POST['fullname'];
-$email=$_POST['emailid'];
-$contactno=$_POST['contactnumber'];
-$password=md5($_POST['inputuserpwd']);
-$sql=mysqli_query($con,"select id from users where email='$email'");
-$count=mysqli_num_rows($sql);
-if($count==0){
-$query=mysqli_query($con,"insert into users(name,email,contactno,password) values('$name','$email','$contactno','$password')");
-if($query)
-{
-    echo "<script>alert('You are successfully register');</script>";
-    echo "<script type='text/javascript'> document.location ='login.php'; </script>";
+if(isset($_SESSION['id'])){
+	echo "<script type='text/javascript'> document.location ='index.php'; </script>";   
 }
-else{
-echo "<script>alert('Not register something went worng');</script>";
-    echo "<script type='text/javascript'> document.location ='signup.php'; </script>";
-} } else{
- echo "<script>alert('Email id already registered with another accout. Please try  with another email id.');</script>";
-    echo "<script type='text/javascript'> document.location ='signup.php'; </script>";   
-}}
+if(isset($_POST['submit']) && !isset($_SESSION['id'])){
+	$name = safe($_POST['fullname']);
+	$email = safe($_POST['emailid']);
+	$contactno = safe($_POST['contactnumber']);
+	$password = safe($_POST['inputuserpwd']);
+	$passwordHashed = password($_POST['inputuserpwd']);
+	$sql = mysqli_query($con,"select id from users where email='$email'");
+	$count = mysqli_num_rows($sql);
+	if($count != 0){
+		echo "<script>alert('Email id already registered with another accout. Please try  with another email id.');</script>";
+		echo "<script type='text/javascript'> document.location ='signup.php'; </script>";   
+	}else if(!preg_match('/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,3}$/', $email) || strlen($email) > 200){
+		echo "<script>alert('You must use the Email pattern. Please try again.');</script>";
+		echo "<script type='text/javascript'> document.location ='signup.php'; </script>";   
+	}else if(!preg_match('/[א-תA-Za-z0-9]{2,50}/', $name)){
+		echo "<script>alert('Please write you full name currectly.');</script>";
+		echo "<script type='text/javascript'> document.location ='signup.php'; </script>";   
+	}else if(!preg_match('/^[0-9]{10}+$/', $contactno)){
+		echo "<script>alert('Please write your real phone number.');</script>";
+		echo "<script type='text/javascript'> document.location ='signup.php'; </script>";   
+	}else if(!preg_match('/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{4,200}/', $password)){
+		echo "<script>alert('The password must be written with english letters and include one big letter and one number.');</script>";
+		echo "<script type='text/javascript'> document.location ='signup.php'; </script>";   
+	}else{
+		$query=mysqli_query($con,"insert into users(name,email,contactno,password) values('$name','$email','$contactno','$passwordHashed')");
+		if($query)
+		{
+			echo "<script>alert('You are successfully register');</script>";
+			echo "<script type='text/javascript'> document.location ='login.php'; </script>";
+		}else{
+			echo "<script>alert('Not register something went worng');</script>";
+			echo "<script type='text/javascript'> document.location ='signup.php'; </script>";
+		}
+	}
+}
 ?>
-            <script>
+<script>
 function emailAvailability() {
 $("#loaderIcon").show();
 jQuery.ajax({

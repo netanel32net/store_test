@@ -49,7 +49,11 @@
                         <li><a href="contact-us.php"><i class="fa-solid fa-earth-asia"></i>page contact</a></li>
 					</ul>
 					<ul class="header-links pull-right">
-                    <?php if($_SESSION['id']==0){?>
+                    <?php 
+					if(isset($_SESSION['id'])){
+						
+						if($_SESSION['id']==0){
+					?>
                         <li class="nav-item dropdown">
 						<li><a href="#" class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa fa-user"></i>Users</a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
@@ -66,7 +70,9 @@
 				<?php } else {?> 
 					<?php if($_SESSION['id']!=0):?>
 						<strong class="text-white">Welcome:&nbsp;</strong> <l class="text-danger"> <?php echo $_SESSION['username'];?> </l>
-<?php endif;?>
+					<?php endif;
+					
+				}?>
 
                         <!-- <li class="nav-item"><a class="nav-link" href="my-wishlist.php">My Wishlist</a></li> -->
                                 <li class="nav-item dropdown">
@@ -103,14 +109,9 @@
 						<!-- SEARCH BAR -->
 						<div class="col-md-6">
 							<div class="header-search">
-								<form>
-									<select class="input-select">
-										<option value="0">All Categories</option>
-										<option value="1">Category 01</option>
-										<option value="1">Category 02</option>
-									</select>
-									<input class="input" placeholder="Search here">
-									<button class="search-btn">Search</button>
+								<form method="POST" action="search-products.php">
+									<input name="searchVal" class="input" placeholder="Search here">
+									<button type="submit" name="searchPro" class="search-btn">Search</button>
 								</form>
 							</div>
 						</div>
@@ -121,59 +122,60 @@
 							<div class="header-ctn">
 								<!-- Wishlist -->
 								<div>
-                                <?php if($_SESSION['id']==0){?>
+                                <?php if(isset($_SESSION['id'])){
+										if($_SESSION['id']==0){?>
                                     <?php } else {?>
 									<a href="my-wishlist.php">
 										<i class="fa fa-heart-o"></i>
 										<span>Your Wishlist</span>
 										<!-- <div class="qty">2</div> -->
 									</a>
-                                    <?php }?>
+                                    <?php }
+									}?>
 								</div>
 								<!-- /Wishlist -->
-
-
-																<!-- Cart -->
-																<?php
-$uid=$_SESSION['id'];
-$ret=mysqli_query($con,"select products.productName as pname,products.productName as proid,products.productImage1 as pimage,products.productPrice as pprice,cart.productId as pid,cart.id as cartid,products.productPriceBeforeDiscount,cart.productQty from cart join products on products.id=cart.productId where cart.userId='$uid'");
-$num=mysqli_num_rows($ret);
-    if($num>0)
-    {
-while ($row=mysqli_fetch_array($ret)) {
-
-?>
-                        <?php 
-$uid=$_SESSION['id'];
-                        $ret=mysqli_query($con,"select sum(productQty) as qtyy from cart where userId='$uid'");
-$result=mysqli_fetch_array($ret);
-$cartcount=$result['qtyy'];
-                        ?>
-																<div class="">
-									<a href="checkout.php" aria-expanded="true">
-										<i class="fa fa-shopping-cart"></i>
-										<span>Your Cart</span>
-										<?php if($cartcount==0):?>
-										<div class="qty">0</div>
-										<?php else: ?>
-											<div class="qty"><?php echo $cartcount; ?></div>
-											<?php endif;?>
-									</a>
-									<div class="cart-dropdown">
-										<div class="cart-list">
-										<?php } ?>
-										<div class="cart-btns">
-											<a href="shop-categories.php">View Cart</a>
-											<a href="checkout.php">Checkout  <i class="fa fa-arrow-circle-right"></i></a>
+									<!-- Cart -->
+									<?php
+									if(isset($_SESSION['id'])){
+										$uid=$_SESSION['id'];
+										$ret=mysqli_query($con,"select products.productName as pname,products.productName as proid,products.productImage1 as pimage,products.productPrice as pprice,cart.productId as pid,cart.id as cartid,products.productPriceBeforeDiscount,cart.productQty from cart join products on products.id=cart.productId where cart.userId='$uid'");
+										$num=mysqli_num_rows($ret);
+										if($num>0)
+										{
+											while ($row=mysqli_fetch_array($ret)) {
+												$uid=$_SESSION['id'];
+												$ret=mysqli_query($con,"select sum(productQty) as qtyy from cart where userId='$uid'");
+												$result=mysqli_fetch_array($ret);
+												$cartcount=$result['qtyy'];
+											?>
+										<div class="">
+										<a href="checkout.php" aria-expanded="true">
+											<i class="fa fa-shopping-cart"></i>
+											<span>Your Cart</span>
+											<?php if($cartcount==0):?>
+											<div class="qty">0</div>
+											<?php else: ?>
+												<div class="qty"><?php echo $cartcount; ?></div>
+												<?php endif;?>
+										</a>
+										<div class="cart-dropdown">
+												<div class="cart-list">
+												<?php } ?>
+												<div class="cart-btns">
+													<a href="shop-categories.php">View Cart</a>
+													<a href="checkout.php">Checkout  <i class="fa fa-arrow-circle-right"></i></a>
+												</div>
+											</div>
 										</div>
-									</div>
-								</div>
-								<?php } else{ ?>
+									<?php 
+								} else{ ?>
 									<div class="cart-btns">
 											<a href="shop-categories.php">עגלת קניות</a>
 											<a href="checkout.php"><i class="fa fa-arrow-circle-right"></i></a>
 										</div>
-										<?php } ?>
+										<?php }
+									}
+									?>
 								<!-- /Cart -->
 
 								<!-- Menu Toogle -->

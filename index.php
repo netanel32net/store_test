@@ -12,6 +12,7 @@ include_once('includes/topBar.php');
 <?php include('includes/onetwopage.php'); ?>
         <!-- includes/pageEmail -->
 <?php include_once('includes/pageEmail.php'); ?>
+
         <!-- Footer-->
 <?php include_once('includes/footer.php'); ?>
 
