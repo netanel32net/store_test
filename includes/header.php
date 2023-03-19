@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -48,33 +49,11 @@
 						<li><a href="#"><i class="fa fa-map-marker"></i> 1734 Stonecoal Road</a></li>
                         <li><a href="contact-us.php"><i class="fa-solid fa-earth-asia"></i>page contact</a></li>
 					</ul>
-					<ul class="header-links pull-right">
-                    <?php 
+					<?php
 					if(isset($_SESSION['id'])){
-						
-						if($_SESSION['id']==0){
-					?>
-                        <li class="nav-item dropdown">
-						<li><a href="#" class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa fa-user"></i>Users</a>
-                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                        <li><a class="dropdown-item, text-danger" href="login.php"><i class="fa fa-user-o"></i>login</a></li>
-                        <li><hr class="dropdown-divider" /></li>
-                        <li><a class="dropdown-item, text-danger" href="signup.php"><i class="fa fa-sign up"></i>Sign Up</a></li>
-                        </ul>
-                        </li>
-                        </li>
-					</ul>
-                   
-				</div>
-			
-				<?php } else {?> 
-					<?php if($_SESSION['id']!=0):?>
-						<strong class="text-white">Welcome:&nbsp;</strong> <l class="text-danger"> <?php echo $_SESSION['username'];?> </l>
-					<?php endif;
-					
-				}?>
-
-                        <!-- <li class="nav-item"><a class="nav-link" href="my-wishlist.php">My Wishlist</a></li> -->
+						echo "<strong class=\"text-white\">Welcome:&nbsp;</strong><l class=\"text-danger\">".$_SESSION['username']."</l>";
+						?>
+						<!-- <li class="nav-item"><a class="nav-link" href="my-wishlist.php">My Wishlist</a></li> -->
                                 <li class="nav-item dropdown">
                                 <li><a href="#" class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa fa-user"></i>My Account</a>
                                 <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
@@ -86,8 +65,25 @@
                                 </ul>
                                 </li>
                         </li>
-                     <?php } ?>  
-                     </div>
+						<?php
+					} else {
+						?>
+						<ul class="header-links pull-right">
+							<li class="nav-item dropdown">
+							<li><a href="#" class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa fa-user"></i>Users</a>
+							<ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+							<li><a class="dropdown-item, text-danger" href="login.php"><i class="fa fa-user-o"></i>login</a></li>
+							<li><hr class="dropdown-divider" /></li>
+							<li><a class="dropdown-item, text-danger" href="signup.php"><i class="fa fa-sign up"></i>Sign Up</a></li>
+							</ul>
+							</li>
+							</li>
+						</ul>
+						<?php
+					}?>
+                   
+				</div>
+            </div>
 			<!-- /TOP HEADER -->
 
 			<!-- MAIN HEADER -->

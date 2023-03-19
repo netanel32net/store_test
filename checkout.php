@@ -4,7 +4,12 @@ error_reporting(0);
 if(strlen($_SESSION['id'])==0)
 {   header('location:logout.php');
 }else{
-// Code for Product deletion from  cart  
+// Code for Product deletion from  cart
+if(isset($_SESSION['coupon']) && !isset($_GET['coupon'])){
+	if($_SESSION['coupon'] != 0){
+		echo "<script type='text/javascript'> document.location ='checkout.php?coupon=".$_SESSION['coupon']."'; </script>";
+	}
+}
 if(isset($_GET['del']))
 {
 $wid=intval($_GET['del']);
@@ -12,31 +17,46 @@ $query=mysqli_query($con,"delete from cart where id='$wid'");
  echo "<script>alert('Product deleted from cart.');</script>";
 echo "<script type='text/javascript'> document.location ='checkout.php'; </script>";
 }
+if(isset($_POST['cpSubmit'])){
+	$cp = safe($_POST['cp']);
+	echo "<script type='text/javascript'> document.location ='checkout.php?coupon=".$cp."'; </script>";
+}
 // For Address Insertion
 if(isset($_POST['submit'])){
-$uid=$_SESSION['id'];    
-//Getting Post Values
-$baddress=$_POST['baddress'];
-$bcity=$_POST['bcity'];
-$bstate=$_POST['bstate'];
-$bpincode=$_POST['bpincode'];
-$bcountry=$_POST['bcountry'];
-$saddress=$_POST['saddress'];
-$scity=$_POST['scity'];
-$sstate=$_POST['sstate'];
-$spincode=$_POST['spincode'];
-$scountry=$_POST['scountry'];
-
-$sql=mysqli_query($con,"insert into addresses(userId,billingAddress,biilingCity,billingState,billingPincode,billingCountry,shippingAddress,shippingCity,shippingState,shippingPincode,shippingCountry) values('$uid','$baddress','$bcity','$bstate','$bpincode','$bcountry','$saddress','$scity','$sstate','$spincode','$scountry')");
-if($sql)
-{
-    echo "<script>alert('You Address added successfully');</script>";
-    echo "<script type='text/javascript'> document.location ='checkout.php'; </script>";
-}
-else{
-echo "<script>alert('Something went wrong. Please try again.');</script>";
-    echo "<script type='text/javascript'> document.location ='checkout.php'; </script>";
-}
+	$uid=$_SESSION['id'];    
+	//Getting Post Values
+	$address = safe($_POST['address']);
+	$city = safe($_POST['city']);
+	$state = safe($_POST['state']);
+	$pincode = safe($_POST['pincode']);
+	$country = safe($_POST['country']);
+	if(!preg_match('/[א-תA-Za-z0-9.,\'\`\"_+-]{2,250}/', $address)){
+		echo "<script>alert('Please enter a valid address.');</script>";
+		echo "<script type='text/javascript'> document.location ='checkout.php'; </script>";
+	}else if(!preg_match('/[א-תA-Za-z0-9.,\'\`\"_+-]{2,250}/', $city)){
+		echo "<script>alert('Please enter a valid city.');</script>";
+		echo "<script type='text/javascript'> document.location ='checkout.php'; </script>";
+	}else if(!preg_match('/[א-תA-Za-z0-9.,\'\`\"_+-]{0,250}/', $state)){
+		echo "<script>alert('Please enter a valid state.');</script>";
+		echo "<script type='text/javascript'> document.location ='checkout.php'; </script>";
+	}else if(!preg_match('/[0-9]{2,7}/', $pincode)){
+		echo "<script>alert('Please enter a valid pin code.');</script>";
+		echo "<script type='text/javascript'> document.location ='checkout.php'; </script>";
+	}else if(!preg_match('/[א-תA-Za-z0-9.,\'\`\"_+-]{2,250}/', $country)){
+		echo "<script>alert('Please enter a valid country.');</script>";
+		echo "<script type='text/javascript'> document.location ='checkout.php'; </script>";		
+	}else{	
+		$sql=mysqli_query($con,"insert into addresses(userId,billingAddress,biilingCity,billingState,billingPincode,billingCountry,shippingAddress,shippingCity,shippingState,shippingPincode,shippingCountry) values('$uid','$address','$city','$state','$pincode','$country','$address','$city','$state','$pincode','$country')");
+		if($sql)
+		{
+			echo "<script>alert('You Address added successfully');</script>";
+			echo "<script type='text/javascript'> document.location ='checkout.php'; </script>";
+		}
+		else{
+			echo "<script>alert('Something went wrong. Please try again.');</script>";
+			echo "<script type='text/javascript'> document.location ='checkout.php'; </script>";
+		}
+	}
 }
 //For Proceeding Payment
 if(isset($_POST['proceedpayment'])){
@@ -112,7 +132,7 @@ while ($row=mysqli_fetch_array($ret)) {
 ?>
 
                 <tr>
-                    <td class="col-md-2"><img src="admin/productimages/<?php echo htmlentities($row['pimage']);?>" alt="<?php echo htmlentities($row['pname']);?>" width="100" height="100"></td>
+                    <td class="col-md-2"><a href="product-details.php?pid=<?php echo htmlentities($pd=$row['pid']);?>"><img src="admin/productimages/<?php echo htmlentities($row['pimage']);?>" alt="<?php echo htmlentities($row['pname']);?>" width="100" height="100"></a></td>
                     <td>
                        <a href="product-details.php?pid=<?php echo htmlentities($pd=$row['pid']);?>"><?php echo htmlentities($row['pname']);?></a>
         </td>
@@ -127,10 +147,63 @@ while ($row=mysqli_fetch_array($ret)) {
                     </td>
                 </tr>
                 <?php $grantotal+=$totalamount;
-            } ?>
+            }
+			$discount = $grantotal;
+			if(isset($_GET['coupon'])){
+				$cp = safe($_GET['coupon']);
+				$query=mysqli_query($con,"SELECT * FROM `coupons` WHERE value='$cp'");
+				if($query->num_rows == 0){
+					$_SESSION['coupon'] = 0;
+					echo "<script>alert('The coupon is not exists.');</script>";
+					echo "<script type='text/javascript'> document.location ='checkout.php'; </script>";
+				}else{
+					$fetch = $query->fetch_assoc();
+					if($fetch['active'] == 0){
+						$_SESSION['coupon'] = 0;
+						echo "<script>alert('The coupon is not valid anymore.');</script>";
+						echo "<script type='text/javascript'> document.location ='checkout.php'; </script>";
+					}else if($fetch['start'] != 0 && $fetch['end'] < time()){
+						$_SESSION['coupon'] = 0;
+						echo "<script>alert('The coupon is not valid anymore.');</script>";
+						echo "<script type='text/javascript'> document.location ='checkout.php'; </script>";
+					}else{
+						$discount = ($discount*$fetch['amount'])/100;
+						if(!isset($_SESSION['coupon'])){
+							$_SESSION['coupon'] = $cp;
+						}else{
+							if($_SESSION['coupon'] != $cp){
+								$_SESSION['coupon'] = $cp;
+							}
+						}
+					}
+				}
+			}
+?>
 <tr>
     <th colspan="4">Grand Total</th>
-    <th colspan="2"><?php echo $grantotal;?></th>
+    <th colspan="2"><?php
+	if($grantotal == $discount){
+		echo $grantotal;
+	}else{
+		echo "<p class=\"text-decoration-line-through\">".$grantotal."</p>".($grantotal-$discount);
+	}
+	?></th>
+</tr>
+<tr>
+	<td colspan="6">
+	<?php
+	if(isset($_SESSION['coupon'])){
+		if($_SESSION['coupon'] != 0){
+			echo "<center><h3><i><ins>\"".$fetch['value']."\"<ins></i> - ".$fetch['amount']."% OFF!</h3></center>";
+		}
+	}
+	?>
+		<center><form method="POST" action="checkout.php">
+			<label>Coupon</label>
+			<input type="text" style="border-radius: 25px; padding: 5px 5px;" name="cp" />
+			<button type="submit" name="cpSubmit" class="btn-upper btn btn-primary">Update Discount</button>
+		</form></center>
+	</td>
 </tr>
             <?php } else{  
     echo "<script type='text/javascript'> document.location ='my-cart.php'; </script>"; } ?>   
@@ -145,162 +218,91 @@ if($count==0):
 echo "<font color='red'>No addresses Found.</font>";
 else:
  ?>
- <form method="post">
-    <input type="hidden" name="grandtotal" value="<?php echo $grantotal; ?>">
+ <form method="post" action="payment.php">
 <div class="row">
-<div class="col-6">
-      <table class="table">
-            <thead>
-                <tr>
-                    <th colspan="4"><h5>Billing Address</h5></th>
-                </tr>
-            </thead>
-            <tr>
-                <thead>
-                    <th>#</th>
-                    <th width="250">Adresss</th>
-                    <th>City</th>
-                    <th>State</th>
-                    <th>Pincode</th>
-                    <th>Country</th>
-            
-                </thead>
-            </tr>
-            </table>  
+	<div class="col-12">
+		  <table class="table">
+				<thead>
+					<tr>
+						<th colspan="4"><h5>Shipping Address</h5></th>
+					</tr>
+				</thead>
+				<tr>
+					<thead>
+						<th>#</th>
+						<th width="250">Adresss</th>
+						<th>City</th>
+						<th>State</th>
+						<th>Pincode</th>
+						<th>Country</th>
+				
+					</thead>
+				</tr>
+				</table>  
 
-</div>
-<div class="col-6">
-          <table class="table">
-            <thead>
-                <tr>
-                    <th colspan="4"><h5>Shipping Address</h5></th>
-                </tr>
-            </thead>
-            <tr>
-                <thead>
-                    <th width="250">Adresss</th>
-                    <th>City</th>
-                    <th>State</th>
-                    <th>Pincode</th>
-                    <th>Country</th>
-            
-                </thead>
-            </tr>
-            </tbody>
-            </table> 
-</div>
+	</div>
 </div>
 <!-- Fecthing Values-->
 <?php while ($result=mysqli_fetch_array($query)) { ?>
 <div class="row">
-<div class="col-6">
-      <table class="table">
+	<div class="col-12">
+		  <table class="table">
+				<tbody> 
+					<tr>
+						<td><input type="radio" name="selectedaddress" value="<?php echo $result['id'];?>" required></td>
+						<td width="250"><?php echo $result['shippingAddress'];?></td>
+						<td><?php echo $result['shippingCity'];?></td>
+						<td><?php echo $result['shippingState'];?></td>
+						<td><?php echo $result['shippingPincode'];?></td>
+						<td><?php echo $result['shippingCountry'];?></td>
+					</tr>
+				</tbody>
+				</table>  
 
-            <tbody> 
-
-                <tr>
-                    <td><input type="radio" name="selectedaddress" value="<?php echo $result['id'];?>" required></td>
-                    <td width="250"><?php echo $result['billingAddress'];?></td>
-                    <td><?php echo $result['biilingCity'];?></td>
-                    <td><?php echo $result['billingState'];?></td>
-                    <td><?php echo $result['billingPincode'];?></td>
-                    <td><?php echo $result['billingCountry'];?></td>
-                </tr>
-            </tbody>
-            </table>  
-
-</div>
-<div class="col-6">
-          <table class="table">
-            <tbody> 
-                <tr>
-                    <td width="250"><?php echo $result['shippingAddress'];?></td>
-                    <td><?php echo $result['shippingCity'];?></td>
-                    <td><?php echo $result['shippingState'];?></td>
-                    <td><?php echo $result['shippingPincode'];?></td>
-                    <td><?php echo $result['shippingCountry'];?></td>
-                </tr>
-            </tbody>
-            </table> 
-</div>
+	</div>
 </div>
 
 
 <?php } endif;?>
-<div align="right">
- <button class="btn-upper btn btn-primary" type="submit" name="proceedpayment">Procced for Payment</button>
-</div>
+	<div align="right">
+	 <button class="btn-upper btn btn-primary" type="submit" name="proceedpayment">Procced for Payment</button>
+	</div>
 </form>
 
 <hr />
 <form method="post" name="address">
 
      <div class="row">
-        <!--Billing Addresss --->
-        <div class="col-6">
-               <div class="row">
-         <div class="col-9" align="center"><h5>New Billing Address</h5><br /></div>
-         <hr />
-     </div>
-     <div class="row">
-         <div class="col-3">Address</div>
-         <div class="col-6"><input type="text" name="baddress" id="baddress" class="form-control" required ></div>
-     </div>
-       <div class="row mt-3">
-         <div class="col-3">City</div>
-         <div class="col-6"><input type="text" name="bcity" id="bcity"  class="form-control" required>
-         </div>
-          
-
-     </div>
-
-       <div class="row mt-3">
-         <div class="col-3">State</div>
-         <div class="col-6"><input type="text" name="bstate" id="bstate" class="form-control" required></div>
-     </div>
-
-          <div class="row mt-3">
-         <div class="col-3">Pincode</div>
-         <div class="col-6"><input type="text" name="bpincode" id="bpincode" pattern="[0-9]+" title="only numbers" maxlength="6" class="form-control" required></div>
-     </div>
-
-           <div class="row mt-3">
-         <div class="col-3">Country</div>
-         <div class="col-6"><input type="text" name="bcountry" id="bcountry" class="form-control" required></div>
-     </div>
- </div>
         <!--Shipping Addresss --->
-        <div class="col-6">
+        <div class="col-12">
                <div class="row">
-         <div class="col-9" align="center"><h5>New Shipping Address</h5> 
-            <input type="checkbox" name="adcheck" value="1"/>
-            <small>Shipping Adress same as billing Address</small></div>
+         <div class="col-9" align="center"><h5>New Shipping Address</h5></div>
          <hr />
      </div>
      <div class="row">
          <div class="col-3">Address</div>
-         <div class="col-6"><input type="text" name="saddress"  id="saddress" class="form-control" required ></div>
+         <div class="col-6"><input type="text" name="address"  id="saddress" class="form-control" required ></div>
      </div>
        <div class="row mt-3">
          <div class="col-3">City</div>
-         <div class="col-6"><input type="text" name="scity" id="scity" class="form-control" required>
+         <div class="col-6"><input type="text" name="city" id="scity" class="form-control" required>
          </div>
           
      </div>
 
        <div class="row mt-3">
          <div class="col-3">State</div>
-         <div class="col-6"><input type="text" name="sstate" id="sstate" class="form-control" required></div>
+         <div class="col-6"><input type="text" name="state" id="sstate" class="form-control" required></div>
      </div>
 
           <div class="row mt-3">
          <div class="col-3">Pincode</div>
-         <div class="col-6"><input type="text" name="spincode" id="spincode" pattern="[0-9]+" title="only numbers" maxlength="6" class="form-control" required></div>
+         <div class="col-6"><input type="text" name="pincode" id="spincode" pattern="[0-9]+" title="only numbers" maxlength="6" class="form-control" required></div>
      </div>
 
            <div class="row mt-3">
          <div class="col-3">Country</div>
-         <div class="col-6"><input type="text" name="scountry" id="scountry" class="form-control" required></div>
+         <div class="col-6"><input type="text" name="country" id="scountry" class="form-control" required></div>
      </div>
 
       

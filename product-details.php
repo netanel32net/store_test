@@ -177,7 +177,7 @@ $catid=$row['catid'];
 							</div> -->
 							<?php if($row['productAvailability']=='In Stock'):?>
 								<div class="d-flex">
-								<input class="form-control text-center me-3" id="inputQuantity" name="inputQuantity" type="num" value="1" style="max-width: 5rem" />
+								<input class="form-control text-center me-3" id="inputQuantity" name="inputQuantity" type="num" value="1" style="max-width: 3rem" />
 							<div class="add-to-cart">
 
 								<button class="add-to-cart-btn" type="submit" name="addtocart">

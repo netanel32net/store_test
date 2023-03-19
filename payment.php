@@ -7,15 +7,52 @@ if($_SESSION['address']==0):
     echo "<script type='text/javascript'> document.location ='checkout.php'; </script>";
 endif;    
 
-
+$grantotal = 0;
 
 //Order details
+if(isset($_POST['proceedpayment'])){
+	$uid=$_SESSION['id'];
+	$ret=mysqli_query($con,"select products.productName as pname,products.productName as proid,products.productImage1 as pimage,products.productPrice as pprice,cart.productId as pid,cart.id as cartid,products.productPriceBeforeDiscount,cart.productQty from cart join products on products.id=cart.productId where cart.userId='$uid'");
+	$num=mysqli_num_rows($ret);
+	if($num>0)
+	{
+		while ($row=mysqli_fetch_array($ret)) {
+			$totalamount = $row['productQty'] * $row['pprice'];
+			$grantotal+=$totalamount;
+		}
+		if(isset($_SESSION['coupon'])){
+			$query=mysqli_query($con,"SELECT * FROM `coupons` WHERE value='".$_SESSION['coupon']."'");
+			if($query->num_rows == 0){
+				$_SESSION['coupon'] = 0;
+				echo "<script>alert('The coupon is not exists.');</script>";
+				echo "<script type='text/javascript'> document.location ='checkout.php'; </script>";
+			}else{
+				$fetch = $query->fetch_assoc();
+				if($fetch['active'] == 0){
+					$_SESSION['coupon'] = 0;
+					echo "<script>alert('The coupon is not valid anymore.');</script>";
+					echo "<script type='text/javascript'> document.location ='checkout.php'; </script>";
+				}else if($fetch['start'] != 0 && $fetch['end'] < time()){
+					$_SESSION['coupon'] = 0;
+					echo "<script>alert('The coupon is not valid anymore.');</script>";
+					echo "<script type='text/javascript'> document.location ='checkout.php'; </script>";
+				}else{
+					$grantotal = $grantotal-($grantotal*$fetch['amount'])/100;
+				}
+			}
+		}
+	}else{
+		echo "<script type='text/javascript'> document.location ='index.php'; </script>";	
+	}
+}else{
+	echo "<script type='text/javascript'> document.location ='index.php'; </script>";
+	exit;
+}
 if(isset($_POST['submit']))
 {
 $orderno= mt_rand(100000000,999999999);
 $userid=$_SESSION['id'];
 $address=$_SESSION['address'];
-$totalamount=$_SESSION['gtotal'];
 $txntype=$_POST['paymenttype'];
 $txnno=$_POST['txnnumber'];
 $query=mysqli_query($con,"insert into orders(orderNumber,userId,addressId,totalAmount,txnType,txnNumber) values('$orderno','$userid','$address','$totalamount','$txntype','$txnno')");
@@ -75,7 +112,7 @@ echo "<script>alert('Something went wrong. Please try again');</script>";
 <form method="post" name="signup">
      <div class="row">
          <div class="col-2">Total Payment</div>
-         <div class="col-6"><input type="text" name="totalamount" value="<?php echo  $_SESSION['gtotal'];?>" class="form-control" readonly ></div>
+         <div class="col-6"><input type="text" name="totalamount" value="<?php echo $grantotal;?>" class="form-control" readonly ></div>
      </div>
        <div class="row mt-3">
          <div class="col-2">Payment Type</div>

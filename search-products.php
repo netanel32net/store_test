@@ -25,7 +25,6 @@ if(isset($_POST['searchPro'])){
 $searchVal = safe($_POST['searchVal']);
 $query = mysqli_query($con, "SELECT * FROM `products` WHERE `productName` LIKE '%".$searchVal."%'");
 $count = mysqli_num_rows($query);
-echo "<script>console.log('".$count."')</script>";
 if($count>0){
 while($row=mysqli_fetch_array($query))
 {
@@ -46,7 +45,7 @@ while($row=mysqli_fetch_array($query))
                             </div>
                             <!-- Product actions-->
                             <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
-                                <div class="text-center"><a class="btn btn-outline-dark mt-auto" href="product-details.php?pid=<?php echo htmlentities($row['pid']);?>">View options</a></div>
+                                <div class="text-center"><a class="btn btn-outline-dark mt-auto" href="product-details.php?pid=<?php echo htmlentities($row['id']);?>">View options</a></div>
                             </div>
                         </div>
                     </div>
