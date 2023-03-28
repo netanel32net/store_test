@@ -1,20 +1,25 @@
 <?php session_start();
-error_reporting(0);
 include_once('includes/config.php');
 // Code for User login
 if(isset($_POST['submit']))
 {
-$username=$_POST['emailid'];
-$cnumber=$_POST['phoneno'];
-$newpassword=md5($_POST['inputPassword']);
-$ret=mysqli_query($con,"SELECT id FROM users WHERE email='$username' and contactno='$cnumber'");
+$email=safe($_POST['emailid']);
+$ret=mysqli_query($con,"SELECT * FROM users WHERE email='$email'");
 $num=mysqli_num_rows($ret);
 if($num>0)
 {
-$query=mysqli_query($con,"update users set password='$newpassword' WHERE email='$username' and contactno='$cnumber'");
+$user = $ret->fetch_assoc();
+$randAuth = rand(10000,99999);
+$query=mysqli_query($con,"INSERT INTO `passwords`(`userId`, `code`, `createDate`) VALUES ('".$user['id']."','".$randAuth."','".time()."')");
+$subject = "GoShop: Password Recovery";
+$body = "Click here to reset your password: https://gogo-shop.co.il/password-recovery.php?res=$randAuth";
+$header = "From: Gogo2014@gmail.com";
+$header .= "Reply-To: Gogo2014@gmail.com";	
+if(!mail($user['email'], $subject, $body, $header))
+  http_response_code(500);
 
-echo "<script>alert('Password reset successfully.');</script>";
-echo "<script type='text/javascript'> document.location ='login.php'; </script>";
+echo "<script>alert('A recovery mail had been sent to your email.');</script>";
+echo "<script type='text/javascript'> document.location ='index.php'; </script>";
 }else{
 echo "<script>alert('Invalid Email or Reg Contact Number');</script>";
 echo "<script type='text/javascript'> document.location ='password-recovery.php'; </script>";
@@ -73,45 +78,84 @@ return true;
         <!-- Section-->
         <section class="py-5">
             <div class="container px-4  mt-5">
-     
+<?php 
+if(isset($_GET['res'])){
+	$code = safe($_GET['res']);
+	$checkRes = $con->query("SELECT * FROM `passwords` WHERE `code`='".$code."'");
+	if($checkRes->num_rows == 0){
+		echo "<script>alert('Invalid Code');</script>";
+		echo "<script type='text/javascript'> document.location ='password-recovery.php'; </script>";
+	}else{
+		$resetFetch = $checkRes->fetch_assoc();
+		$userQuery=mysqli_query($con,"SELECT * FROM `users` WHERE `id`='".$resetFetch['userId']."'");
+		if((($resetFetch['createDate'] + 86400) < time()) || $userQuery->num_rows == 0){
+			mysqli_query($con,"DELETE FROM `passwords` WHERE `id`='".$resetFetch['id']."'");
+			echo "<script>alert('Outdated code, please try again');</script>";
+			echo "<script type='text/javascript'> document.location ='password-recovery.php'; </script>";
+		}else{
+			$userFetch = $userQuery->fetch_assoc();
+			if(isset($_POST['updatePassword'])){
+				$p1NotHashed = safe($_POST['inputPassword']);
+				$p1 = password($_POST['inputPassword']);
+				$p2 = password($_POST['cinputPassword']);
+				if(!preg_match('/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{4,200}/', $p1NotHashed)){
+					echo "<script>alert('The password must be written with english letters and include one big letter and one number.');</script>";
+					echo "<script type='text/javascript'> document.location ='password-recovery.php?res=".$resetFetch['code']."'; </script>";   
+				}else if($p1 != $p2){
+					echo "<script>alert('The passwords are not the same!');</script>";
+					echo "<script type='text/javascript'> document.location ='password-recovery.php?res=".$resetFetch['code']."'; </script>"; 
+				}else{
+					$sql=mysqli_query($con,"UPDATE `users` SET `password`='".$p1."' WHERE `id`='".$userFetch['id']."'");
+					$sql2=mysqli_query($con,"delete from passwords where id ='".$resetFetch['id']."'");
+					echo "<script>alert('The passwords has been changed!');</script>";
+					echo "<script type='text/javascript'> document.location ='login.php'; </script>"; 
+				}
+			}
+			?>
+			<form method="post" onSubmit="return valid();">
+				   <div class="row mt-3">
+					 <div class="col-2">Email Id</div>
+					 <div class="col-6"><?php echo $userFetch['email']; ?></div>
+				 </div>
+				 
+				 <div class="row mt-3">
+					 <div class="col-2">New Password</div>
+					 <div class="col-6"><input type="password" name="inputPassword" id="inputPassword" class="form-control" required></div>
+				 </div>
 
-<form method="post" name="passwordrecovery" onSubmit="return valid();">
+						   <div class="row mt-3">
+					 <div class="col-2">Password Recovery</div>
+					 <div class="col-6"><input type="password" name="cinputPassword" id="cinputPassword" class="form-control" required></div>
+				 </div>
+				 <div class="row mt-3">
+							 <div class="col-4">&nbsp;</div>
+					 <div class="col-6"><input type="submit" name="updatePassword" id="submit" class="btn btn-primary" value="Submit" required></div>
+				 </div>
+			</form>
+			<?php
+		}
+	}
+}else{
+	?>
+	<form method="post" onSubmit="return valid();">
 
        <div class="row mt-3">
          <div class="col-2">Email Id</div>
          <div class="col-6"><input type="email" name="emailid" id="emailid" class="form-control"  required>
          </div>
-          
-     </div>
-
-         <div class="row mt-3">
-         <div class="col-2">Reg. Contact No.</div>
-         <div class="col-6"><input type="text" name="phoneno" id="phoneno" class="form-control" required>
-         </div>
-          
-     </div>
-
-
-          <div class="row mt-3">
-         <div class="col-2">Password</div>
-         <div class="col-6"><input type="password" name="inputPassword" id="inputPassword" class="form-control" required></div>
-     </div>
-
-               <div class="row mt-3">
-         <div class="col-2">Password Recovery</div>
-         <div class="col-6"><input type="password" name="cinputPassword" id="cinputPassword" class="form-control" required></div>
-     </div>
-
-               <div class="row mt-3">
+                         <div class="row mt-3">
                  <div class="col-4">&nbsp;</div>
          <div class="col-6"><input type="submit" name="submit" id="submit" class="btn btn-primary" value="Submit" required></div>
      </div>
+     </div>
  </form>
-              
+	<?php
+}
+?>
+            
             </div>
 
  
-</div>
         </section>
         <!-- Footer-->
    <?php include_once('includes/footer.php'); ?>

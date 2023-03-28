@@ -23,27 +23,27 @@ echo "<script>alert('This product is already added in your wishlist.');</script>
 
 //Code for Adding Product in to Cart
 if(isset($_POST['addtocart'])){
-if(strlen($_SESSION['id'])==0)
-{   
-echo "<script>alert('Login is required to add a product in to the cart');</script>";
-} else{
-$userid=$_SESSION['id']; 
-$pqty=$_POST['inputQuantity'];  
-$query=mysqli_query($con,"select id,productQty from cart where userId='$userid' and productId='$pid'");
-$count=mysqli_num_rows($query);
-if($count==0){
-mysqli_query($con,"insert into cart(userId,productId,productQty) values('$userid','$pid','$pqty')");
-echo "<script>alert('Product aaded in cart');</script>";
-  echo "<script type='text/javascript'> document.location ='my-cart.php'; </script>";
-} else { 
-$row=mysqli_fetch_array($query);
-$currentpqty=$row['productQty'];
-$productqty=$pqty+$currentpqty;
-mysqli_query($con,"update cart set productQty='$productqty' where userId='$userid' and productId='$pid'");
-echo "<script>alert('Product aaded in cart');</script>";
-  echo "<script type='text/javascript'> document.location ='my-cart.php'; </script>";
+	if(strlen($_SESSION['id'])==0){   
+		echo "<script>alert('Login is required to add a product in to the cart');</script>";
+	} else{
+		$userid=$_SESSION['id']; 
+		$pqty=$_POST['inputQuantity'];  
+		$query=mysqli_query($con,"select id,productQty from cart where userId='$userid' and productId='$pid'");
+		$count=mysqli_num_rows($query);
+		if($count==0){
+				mysqli_query($con,"insert into cart(userId,productId,productQty) values('$userid','$pid','$pqty')");
+				echo "<script>alert('Product aaded in cart');</script>";
+				echo "<script type='text/javascript'> document.location ='my-cart.php'; </script>";
+		} else { 
+			$row=mysqli_fetch_array($query);
+			$currentpqty=$row['productQty'];
+			$productqty=$pqty+$currentpqty;
+			mysqli_query($con,"update cart set productQty='$productqty' where userId='$userid' and productId='$pid'");
+			echo "<script>alert('Product aaded in cart');</script>";
+			echo "<script type='text/javascript'> document.location ='my-cart.php'; </script>";
+		}
+	}
 }
-}}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -156,7 +156,7 @@ $catid=$row['catid'];
 								<a class="review-link" href="#">10 Review(s) | Add your review</a>
 							</div>
 							<div>
-								<h3 class="product-price"><?php echo htmlentities($row['productPrice']);?><del class="product-old-price"><?php echo htmlentities($row['productPriceBeforeDiscount']);?></del></h3>
+								<h3 class="product-price"><?php echo htmlentities($row['productPrice']);?><del class="product-old-price"><?php if($row['productPriceBeforeDiscount'] > $row['productPrice']) { echo htmlentities($row['productPriceBeforeDiscount']); }?></del></h3>
 								<!-- <span class="product-available">In Stock</span> -->
 							</div>
 							<p><?php echo $row['productDescription'];?></p>

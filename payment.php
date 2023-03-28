@@ -3,50 +3,53 @@ include_once('includes/config.php');
 if(strlen($_SESSION['id'])==0)
 {   header('location:logout.php');
 }else{
+//For Proceeding Payment
+if(isset($_POST['proceedpayment'])){
+	$address = safe($_POST['selectedaddress']);
+	$query = mysqli_query($con,"select * from addresses where id='$address'");
+	if($query->num_rows == 0){
+		echo "<script>alert('Unknown address.');</script>";
+		echo "<script type='text/javascript'> document.location ='checkout.php'; </script>";   
+	}else{
+		$_SESSION['address'] = $address;
+	}
+}
+	
 if($_SESSION['address']==0):
     echo "<script type='text/javascript'> document.location ='checkout.php'; </script>";
-endif;    
+endif;   
 
 $grantotal = 0;
 
 //Order details
-if(isset($_POST['proceedpayment'])){
-	$uid=$_SESSION['id'];
-	$ret=mysqli_query($con,"select products.productName as pname,products.productName as proid,products.productImage1 as pimage,products.productPrice as pprice,cart.productId as pid,cart.id as cartid,products.productPriceBeforeDiscount,cart.productQty from cart join products on products.id=cart.productId where cart.userId='$uid'");
-	$num=mysqli_num_rows($ret);
-	if($num>0)
-	{
-		while ($row=mysqli_fetch_array($ret)) {
-			$totalamount = $row['productQty'] * $row['pprice'];
-			$grantotal+=$totalamount;
-		}
-		if(isset($_SESSION['coupon'])){
-			$query=mysqli_query($con,"SELECT * FROM `coupons` WHERE value='".$_SESSION['coupon']."'");
-			if($query->num_rows == 0){
-				$_SESSION['coupon'] = 0;
-				echo "<script>alert('The coupon is not exists.');</script>";
+$uid=$_SESSION['id'];
+$ret=mysqli_query($con,"select products.productName as pname,products.productName as proid,products.productImage1 as pimage,products.productPrice as pprice,cart.productId as pid,cart.id as cartid,products.productPriceBeforeDiscount,cart.productQty from cart join products on products.id=cart.productId where cart.userId='$uid'");
+$num=mysqli_num_rows($ret);
+if($num>0)
+{
+	while ($row=mysqli_fetch_array($ret)) {
+		$totalamount = $row['productQty'] * $row['pprice'];
+		$grantotal+=$totalamount;
+	}
+	if(isset($_SESSION['coupon'])){
+		$query=mysqli_query($con,"SELECT * FROM `coupons` WHERE value='".$_SESSION['coupon']."'");
+		if($query->num_rows == 0){
+			unset($_SESSION["coupon"]);
+			echo "<script>alert('The coupon is not exists.');</script>";
+			echo "<script type='text/javascript'> document.location ='checkout.php'; </script>";
+		}else{
+			$fetch = $query->fetch_assoc();
+			if($fetch['start'] != 0 && $fetch['end'] < time()){
+				unset($_SESSION["coupon"]);
+				echo "<script>alert('The coupon is not valid anymore.');</script>";
 				echo "<script type='text/javascript'> document.location ='checkout.php'; </script>";
 			}else{
-				$fetch = $query->fetch_assoc();
-				if($fetch['active'] == 0){
-					$_SESSION['coupon'] = 0;
-					echo "<script>alert('The coupon is not valid anymore.');</script>";
-					echo "<script type='text/javascript'> document.location ='checkout.php'; </script>";
-				}else if($fetch['start'] != 0 && $fetch['end'] < time()){
-					$_SESSION['coupon'] = 0;
-					echo "<script>alert('The coupon is not valid anymore.');</script>";
-					echo "<script type='text/javascript'> document.location ='checkout.php'; </script>";
-				}else{
-					$grantotal = $grantotal-($grantotal*$fetch['amount'])/100;
-				}
+				$grantotal = $grantotal-($grantotal*$fetch['amount'])/100;
 			}
 		}
-	}else{
-		echo "<script type='text/javascript'> document.location ='index.php'; </script>";	
 	}
 }else{
-	echo "<script type='text/javascript'> document.location ='index.php'; </script>";
-	exit;
+	echo "<script type='text/javascript'> document.location ='index.php'; </script>";	
 }
 if(isset($_POST['submit']))
 {

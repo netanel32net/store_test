@@ -83,7 +83,7 @@ while ($row=mysqli_fetch_array($ret)) {
                        <a href="product-details.php?pid=<?php echo htmlentities($pd=$row['pid']);?>"><?php echo htmlentities($row['pname']);?></a>
   </td>
 <td>
-                           <span class="text-decoration-line-through">$<?php echo htmlentities($row['productPriceBeforeDiscount']);?></span>
+							<?php if($row['productPriceBeforeDiscount'] > $row['pprice']) { echo "<span class=\"text-decoration-line-through\">$".htmlentities($row['productPriceBeforeDiscount'])."</span>"; } ?>
                             <span>$<?php echo htmlentities($row['pprice']);?></span>
                     </td>
                     <td><?php echo htmlentities($row['productQty']);?></td>

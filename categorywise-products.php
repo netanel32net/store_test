@@ -1,5 +1,4 @@
 <?php session_start();
-error_reporting(0);
 include_once('includes/config.php');
 ?>
 <?php include_once('includes/header.php');?>

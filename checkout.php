@@ -1,6 +1,5 @@
 <?php session_start();
 include_once('includes/config.php');
-error_reporting(0);
 if(strlen($_SESSION['id'])==0)
 {   header('location:logout.php');
 }else{
@@ -12,9 +11,9 @@ if(isset($_SESSION['coupon']) && !isset($_GET['coupon'])){
 }
 if(isset($_GET['del']))
 {
-$wid=intval($_GET['del']);
-$query=mysqli_query($con,"delete from cart where id='$wid'");
- echo "<script>alert('Product deleted from cart.');</script>";
+$wid= safe(intval($_GET['del']));
+$query = mysqli_query($con,"delete from cart where id='$wid'");
+echo "<script>alert('Product deleted from cart.');</script>";
 echo "<script type='text/javascript'> document.location ='checkout.php'; </script>";
 }
 if(isset($_POST['cpSubmit'])){
@@ -57,14 +56,6 @@ if(isset($_POST['submit'])){
 			echo "<script type='text/javascript'> document.location ='checkout.php'; </script>";
 		}
 	}
-}
-//For Proceeding Payment
-if(isset($_POST['proceedpayment'])){
- $address=$_POST['selectedaddress'];  
- $gtotal=$_POST['grandtotal']; 
- $_SESSION['address']=$address;
- $_SESSION['gtotal']=$gtotal;
-   echo "<script type='text/javascript'> document.location ='payment.php'; </script>";   
 }
 ?>
 <!DOCTYPE html>
@@ -127,6 +118,7 @@ $ret=mysqli_query($con,"select products.productName as pname,products.productNam
 $num=mysqli_num_rows($ret);
     if($num>0)
     {
+		$grantotal = 0;
 while ($row=mysqli_fetch_array($ret)) {
 
 ?>
@@ -137,7 +129,7 @@ while ($row=mysqli_fetch_array($ret)) {
                        <a href="product-details.php?pid=<?php echo htmlentities($pd=$row['pid']);?>"><?php echo htmlentities($row['pname']);?></a>
         </td>
 <td>
-                           <span class="text-decoration-line-through">$<?php echo htmlentities($row['productPriceBeforeDiscount']);?></span>
+							<?php if($row['productPriceBeforeDiscount'] > $row['pprice']) { echo "<span class=\"text-decoration-line-through\">$".htmlentities($row['productPriceBeforeDiscount'])."</span>"; } ?>
                             <span>$<?php echo htmlentities($row['pprice']);?></span>
                     </td>
                     <td><?php echo htmlentities($row['productQty']);?></td>
@@ -153,17 +145,13 @@ while ($row=mysqli_fetch_array($ret)) {
 				$cp = safe($_GET['coupon']);
 				$query=mysqli_query($con,"SELECT * FROM `coupons` WHERE value='$cp'");
 				if($query->num_rows == 0){
-					$_SESSION['coupon'] = 0;
+					unset($_SESSION["coupon"]);
 					echo "<script>alert('The coupon is not exists.');</script>";
 					echo "<script type='text/javascript'> document.location ='checkout.php'; </script>";
 				}else{
 					$fetch = $query->fetch_assoc();
-					if($fetch['active'] == 0){
-						$_SESSION['coupon'] = 0;
-						echo "<script>alert('The coupon is not valid anymore.');</script>";
-						echo "<script type='text/javascript'> document.location ='checkout.php'; </script>";
-					}else if($fetch['start'] != 0 && $fetch['end'] < time()){
-						$_SESSION['coupon'] = 0;
+					if($fetch['start'] != 0 && $fetch['end'] < time()){
+						unset($_SESSION["coupon"]);
 						echo "<script>alert('The coupon is not valid anymore.');</script>";
 						echo "<script type='text/javascript'> document.location ='checkout.php'; </script>";
 					}else{
